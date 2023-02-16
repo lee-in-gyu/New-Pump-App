@@ -7,6 +7,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Linking,
 } from "react-native";
 import { auth } from "../firebase";
 import { db } from "../firebase";
@@ -14,6 +15,11 @@ import { db } from "../firebase";
 const HomeScreen = () => {
   const navigation = useNavigation();
   const [steps, setSteps] = useState([]);
+  const [level, setlevel] = useState(undefined);
+
+  useEffect(() => {
+    getStepDb();
+  }, []);
 
   const getStepDb = async () => {
     const dbSteps = await db.collection("step_info").get();
@@ -22,9 +28,10 @@ const HomeScreen = () => {
         ...docs.data(),
       };
       setSteps((prev) => [docs.data(), ...prev]);
-      console.log(stepsObject.id);
+      // console.log(stepsObject.level);
     });
   };
+
   const handleSignOut = () => {
     auth
       .signOut()
@@ -34,27 +41,40 @@ const HomeScreen = () => {
       .catch((error) => alert(error.message));
   };
 
-  useEffect(() => {
-    getStepDb();
-  }, []);
-
   const Item = ({ title }) => (
-    <View style={styles.item}>
-      <Text style={styles.title}>{title}</Text>
-    </View>
+    <TouchableOpacity>
+      <View style={styles.item}>
+        <Text style={styles.title}>{title}</Text>
+      </View>
+    </TouchableOpacity>
   );
+
   return (
-    <View style={styles.container}>
+    <View style={styles.header}>
       <View>
         <Text>E-mail: {auth.currentUser?.email}</Text>
         <TouchableOpacity onPress={handleSignOut} style={styles.button}>
           <Text style={styles.buttonText}>로그아웃</Text>
         </TouchableOpacity>
-        <FlatList
+        {/* <FlatList
           data={steps}
           renderItem={({ item }) => <Item title={item.title} />}
-          keyExtractor={(item) => item.id}
-        />
+          keyExtractor={(item) => item.url}
+        /> */}
+        <ScrollView>
+          {steps.map((step) =>
+            step.level === 27 ? (
+              <TouchableOpacity
+                key={step.url}
+                onPress={() => Linking.openURL(step.url)}
+              >
+                <View style={styles.item}>
+                  <Text style={styles.title}>{step.title}</Text>
+                </View>
+              </TouchableOpacity>
+            ) : null
+          )}
+        </ScrollView>
       </View>
     </View>
   );
@@ -63,7 +83,7 @@ const HomeScreen = () => {
 export default HomeScreen;
 
 const styles = StyleSheet.create({
-  container: {
+  header: {
     flex: 1,
     alignItems: "center",
   },
