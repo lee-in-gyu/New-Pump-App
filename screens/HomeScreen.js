@@ -21,15 +21,30 @@ const HomeScreen = () => {
     getStepDb();
   }, []);
 
-  const getStepDb = async () => {
-    const dbSteps = await db.collection("step_info").get();
-    dbSteps.forEach((docs) => {
-      const stepsObject = {
-        ...docs.data(),
-      };
-      setSteps((prev) => [docs.data(), ...prev]);
-      // console.log(stepsObject.level);
-    });
+  // const getStepDb = async () => {
+  //   const dbSteps = await db.collection("step_info").get();
+  //   dbSteps.forEach((docs) => {
+  //     const stepsObject = {
+  //       ...docs.data(),
+  //     };
+  //     setSteps((prev) => [docs.data(), ...prev]);
+  //     console.log(stepsObject.level);
+  //   });
+  // };
+
+  const getStepDb = () => {
+    db.collection("step_info")
+      .where("level", "==", 27)
+      .get()
+      .then((snapshot) => {
+        snapshot.forEach((doc) => {
+          const stepsObject = {
+            ...doc.data(),
+          };
+          setSteps((prev) => [doc.data(), ...prev]);
+          // console.log(stepsObject);
+        });
+      });
   };
 
   const handleSignOut = () => {
@@ -40,15 +55,8 @@ const HomeScreen = () => {
       })
       .catch((error) => alert(error.message));
   };
-
-  const Item = ({ title }) => (
-    <TouchableOpacity>
-      <View style={styles.item}>
-        <Text style={styles.title}>{title}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-
+  const video = React.useRef(null);
+  const [status, setStatus] = React.useState({});
   return (
     <View style={styles.header}>
       <View>
@@ -56,24 +64,17 @@ const HomeScreen = () => {
         <TouchableOpacity onPress={handleSignOut} style={styles.button}>
           <Text style={styles.buttonText}>로그아웃</Text>
         </TouchableOpacity>
-        {/* <FlatList
-          data={steps}
-          renderItem={({ item }) => <Item title={item.title} />}
-          keyExtractor={(item) => item.url}
-        /> */}
         <ScrollView>
-          {steps.map((step) =>
-            step.level === 27 ? (
-              <TouchableOpacity
-                key={step.url}
-                onPress={() => Linking.openURL(step.url)}
-              >
-                <View style={styles.item}>
-                  <Text style={styles.title}>{step.title}</Text>
-                </View>
-              </TouchableOpacity>
-            ) : null
-          )}
+          {steps.map((step) => (
+            <TouchableOpacity
+              key={step.url}
+              onPress={() => Linking.openURL(step.url)}
+            >
+              <View style={styles.item}>
+                <Text style={styles.title}>{step.title}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
         </ScrollView>
       </View>
     </View>
