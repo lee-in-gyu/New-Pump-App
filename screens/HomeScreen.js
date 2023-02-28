@@ -1,5 +1,5 @@
 import { useNavigation } from "@react-navigation/core";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
   ScrollView,
@@ -8,9 +8,11 @@ import {
   TouchableOpacity,
   View,
   Linking,
+  Button,
 } from "react-native";
 import { auth } from "../firebase";
 import { db } from "../firebase";
+import YoutubePlayer from "react-native-youtube-iframe";
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -55,8 +57,18 @@ const HomeScreen = () => {
       })
       .catch((error) => alert(error.message));
   };
-  const video = React.useRef(null);
-  const [status, setStatus] = React.useState({});
+  const [playing, setPlaying] = useState(false);
+  const onStateChange = useCallback((state) => {
+    if (state === "ended") {
+      setPlaying(false);
+      Alert.alert("video has finished playing!");
+    }
+  }, []);
+
+  const togglePlaying = useCallback(() => {
+    setPlaying((prev) => !prev);
+  }, []);
+
   return (
     <View style={styles.header}>
       <View>
@@ -66,14 +78,24 @@ const HomeScreen = () => {
         </TouchableOpacity>
         <ScrollView>
           {steps.map((step) => (
-            <TouchableOpacity
-              key={step.url}
-              onPress={() => Linking.openURL(step.url)}
-            >
-              <View style={styles.item}>
-                <Text style={styles.title}>{step.title}</Text>
-              </View>
-            </TouchableOpacity>
+            <View key={step.count}>
+              <TouchableOpacity
+                key={step.url}
+                onPress={() =>
+                  Linking.openURL("http://www.youtube.com/watch?v=" + step.url)
+                }
+              >
+                <View style={styles.item}>
+                  <Text style={styles.title}>{step.title}</Text>
+                </View>
+              </TouchableOpacity>
+              <YoutubePlayer
+                height={300}
+                play={playing}
+                videoId={step.url}
+                onChangeState={onStateChange}
+              />
+            </View>
           ))}
         </ScrollView>
       </View>
