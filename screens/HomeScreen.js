@@ -14,15 +14,21 @@ import {
 import { auth } from "../firebase";
 import { db } from "../firebase";
 import YoutubePlayer from "react-native-youtube-iframe";
+import DropDownPicker from "react-native-dropdown-picker";
 
 const HomeScreen = () => {
   const navigation = useNavigation();
   const [steps, setSteps] = useState([]);
-  const [level, setlevel] = useState(undefined);
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(null);
+  const [items, setItems] = useState([
+    { label: "26", value: 26 },
+    { label: "27~28", value: 27 },
+  ]);
 
   useEffect(() => {
     getStepDb();
-  }, []);
+  }, [value]);
 
   // const getStepDb = async () => {
   //   const dbSteps = await db.collection("step_info").get();
@@ -37,7 +43,7 @@ const HomeScreen = () => {
 
   const getStepDb = () => {
     db.collection("step_info")
-      .where("level", "==", 27)
+      .where("level", "==", value)
       .get()
       .then((snapshot) => {
         snapshot.forEach((doc) => {
@@ -69,40 +75,60 @@ const HomeScreen = () => {
         <TouchableOpacity onPress={handleSignOut} style={styles.button}>
           <Text style={styles.buttonText}>로그아웃</Text>
         </TouchableOpacity>
+        <DropDownPicker
+          open={open}
+          value={value}
+          items={items}
+          setOpen={setOpen}
+          setValue={setValue}
+          setItems={setItems}
+          placeholder="카테고리"
+          listMode="MODAL"
+          modalProps={{
+            animationType: "fade",
+          }}
+          modalTitle="선택해주세요."
+        />
         <Switch
           trackColor={{ false: "#767577", true: "#81b0ff" }}
-          thumbColor={isEnabled ? "#f5dd4b" : "#cc1200"}
+          thumbColor={isEnabled ? "#f5dd4b" : "#f4f3f4"}
           ios_backgroundColor="#3e3e3e"
           onValueChange={toggleSwitch}
           value={isEnabled}
         />
-        <ScrollView>
-          {steps.map((step) => (
-            <View key={step.count}>
-              {isEnabled === false ? (
-                <TouchableOpacity
-                  key={step.url}
-                  onPress={() =>
-                    Linking.openURL(
-                      "http://www.youtube.com/watch?v=" + step.url
-                    )
-                  }
-                >
-                  <View style={styles.item}>
-                    <Text style={styles.title}>{step.title}</Text>
+        {value === null ? null : (
+          <ScrollView>
+            {steps.map((step) => (
+              <View key={step.url}>
+                {isEnabled === false ? (
+                  <TouchableOpacity
+                    key={step.url}
+                    onPress={() =>
+                      Linking.openURL(
+                        "http://www.youtube.com/watch?v=" + step.url
+                      )
+                    }
+                  >
+                    <View style={styles.item}>
+                      <Text style={styles.title}>{step.title}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ) : (
+                  <View>
+                    <View style={styles.item}>
+                      <Text style={styles.title}>{step.title}</Text>
+                    </View>
+                    <YoutubePlayer
+                      height={200}
+                      play={false}
+                      videoId={step.url}
+                    />
                   </View>
-                </TouchableOpacity>
-              ) : (
-                <View>
-                  <View style={styles.item}>
-                    <Text style={styles.title}>{step.title}</Text>
-                  </View>
-                  <YoutubePlayer height={200} play={false} videoId={step.url} />
-                </View>
-              )}
-            </View>
-          ))}
-        </ScrollView>
+                )}
+              </View>
+            ))}
+          </ScrollView>
+        )}
       </View>
     </View>
   );
