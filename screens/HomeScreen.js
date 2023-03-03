@@ -9,6 +9,7 @@ import {
   View,
   Linking,
   Button,
+  Switch,
 } from "react-native";
 import { auth } from "../firebase";
 import { db } from "../firebase";
@@ -57,17 +58,9 @@ const HomeScreen = () => {
       })
       .catch((error) => alert(error.message));
   };
-  const [playing, setPlaying] = useState(false);
-  const onStateChange = useCallback((state) => {
-    if (state === "ended") {
-      setPlaying(false);
-      Alert.alert("video has finished playing!");
-    }
-  }, []);
 
-  const togglePlaying = useCallback(() => {
-    setPlaying((prev) => !prev);
-  }, []);
+  const [isEnabled, setIsEnabled] = useState(false);
+  const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
 
   return (
     <View style={styles.header}>
@@ -76,25 +69,37 @@ const HomeScreen = () => {
         <TouchableOpacity onPress={handleSignOut} style={styles.button}>
           <Text style={styles.buttonText}>로그아웃</Text>
         </TouchableOpacity>
+        <Switch
+          trackColor={{ false: "#767577", true: "#81b0ff" }}
+          thumbColor={isEnabled ? "#f5dd4b" : "#cc1200"}
+          ios_backgroundColor="#3e3e3e"
+          onValueChange={toggleSwitch}
+          value={isEnabled}
+        />
         <ScrollView>
           {steps.map((step) => (
             <View key={step.count}>
-              <TouchableOpacity
-                key={step.url}
-                onPress={() =>
-                  Linking.openURL("http://www.youtube.com/watch?v=" + step.url)
-                }
-              >
-                <View style={styles.item}>
-                  <Text style={styles.title}>{step.title}</Text>
+              {isEnabled === false ? (
+                <TouchableOpacity
+                  key={step.url}
+                  onPress={() =>
+                    Linking.openURL(
+                      "http://www.youtube.com/watch?v=" + step.url
+                    )
+                  }
+                >
+                  <View style={styles.item}>
+                    <Text style={styles.title}>{step.title}</Text>
+                  </View>
+                </TouchableOpacity>
+              ) : (
+                <View>
+                  <View style={styles.item}>
+                    <Text style={styles.title}>{step.title}</Text>
+                  </View>
+                  <YoutubePlayer height={200} play={false} videoId={step.url} />
                 </View>
-              </TouchableOpacity>
-              <YoutubePlayer
-                height={300}
-                play={playing}
-                videoId={step.url}
-                onChangeState={onStateChange}
-              />
+              )}
             </View>
           ))}
         </ScrollView>
