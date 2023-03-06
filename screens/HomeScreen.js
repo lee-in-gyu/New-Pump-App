@@ -22,6 +22,12 @@ const HomeScreen = () => {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(null);
   const [items, setItems] = useState([
+    { label: "20", value: 20 },
+    { label: "21", value: 21 },
+    { label: "22", value: 22 },
+    { label: "23", value: 23 },
+    { label: "24", value: 24 },
+    { label: "25", value: 25 },
     { label: "26", value: 26 },
     { label: "27~28", value: 27 },
   ]);
@@ -68,6 +74,32 @@ const HomeScreen = () => {
   const [isEnabled, setIsEnabled] = useState(false);
   const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
 
+  const Item = ({ item, onPress }) => (
+    <View>
+      {isEnabled === false ? (
+        <TouchableOpacity onPress={onPress} style={styles.item}>
+          <Text style={styles.title}>{item.title}</Text>
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.item}>
+          <Text style={styles.title}>{item.title}</Text>
+          <YoutubePlayer height={200} play={false} videoId={item.url} />
+        </View>
+      )}
+    </View>
+  );
+
+  const renderItem = ({ item }) => {
+    return (
+      <Item
+        item={item}
+        onPress={() =>
+          Linking.openURL("http://www.youtube.com/watch?v=" + item.url)
+        }
+      />
+    );
+  };
+
   return (
     <View style={styles.header}>
       <View>
@@ -82,7 +114,7 @@ const HomeScreen = () => {
           setOpen={setOpen}
           setValue={setValue}
           setItems={setItems}
-          placeholder="카테고리"
+          placeholder="레벨 선택"
           listMode="MODAL"
           modalProps={{
             animationType: "fade",
@@ -97,37 +129,11 @@ const HomeScreen = () => {
           value={isEnabled}
         />
         {value === null ? null : (
-          <ScrollView>
-            {steps.map((step) => (
-              <View key={step.url}>
-                {isEnabled === false ? (
-                  <TouchableOpacity
-                    key={step.url}
-                    onPress={() =>
-                      Linking.openURL(
-                        "http://www.youtube.com/watch?v=" + step.url
-                      )
-                    }
-                  >
-                    <View style={styles.item}>
-                      <Text style={styles.title}>{step.title}</Text>
-                    </View>
-                  </TouchableOpacity>
-                ) : (
-                  <View>
-                    <View style={styles.item}>
-                      <Text style={styles.title}>{step.title}</Text>
-                    </View>
-                    <YoutubePlayer
-                      height={200}
-                      play={false}
-                      videoId={step.url}
-                    />
-                  </View>
-                )}
-              </View>
-            ))}
-          </ScrollView>
+          <FlatList
+            data={steps}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.title}
+          />
         )}
       </View>
     </View>
