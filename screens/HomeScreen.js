@@ -36,19 +36,10 @@ const HomeScreen = () => {
     getStepDb();
   }, [value]);
 
-  // const getStepDb = async () => {
-  //   const dbSteps = await db.collection("step_info").get();
-  //   dbSteps.forEach((docs) => {
-  //     const stepsObject = {
-  //       ...docs.data(),
-  //     };
-  //     setSteps((prev) => [docs.data(), ...prev]);
-  //     console.log(stepsObject.level);
-  //   });
-  // };
-
-  const getStepDb = () => {
-    db.collection("step_info")
+  const getStepDb = async () => {
+    setSteps([]);
+    await db
+      .collection("step_info")
       .where("level", "==", value)
       .get()
       .then((snapshot) => {
