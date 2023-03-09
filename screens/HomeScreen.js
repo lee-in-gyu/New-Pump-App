@@ -10,6 +10,7 @@ import {
   Linking,
   Button,
   Switch,
+  ActivityIndicator,
 } from "react-native";
 import { auth } from "../firebase";
 import { db } from "../firebase";
@@ -20,6 +21,7 @@ const HomeScreen = () => {
   const navigation = useNavigation();
   const [steps, setSteps] = useState([]);
   const [open, setOpen] = useState(false);
+  const [playing, setPlaying] = useState(false);
   const [value, setValue] = useState(null);
   const [items, setItems] = useState([
     { label: "20", value: 20 },
@@ -41,16 +43,27 @@ const HomeScreen = () => {
     await db
       .collection("step_info")
       .where("level", "==", value)
-      .get()
-      .then((snapshot) => {
-        snapshot.forEach((doc) => {
-          const stepsObject = {
-            ...doc.data(),
-          };
-          setSteps((prev) => [doc.data(), ...prev]);
-          // console.log(stepsObject);
-        });
+      .onSnapshot((snapshot) => {
+        const stepsObject = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setSteps(stepsObject);
+
+        // console.log(stepsObject);
       });
+
+    // .get()
+    // .then((snapshot) => {
+    //   snapshot.forEach((doc) => {
+    //     const stepsObject = {
+    //       id: doc.id,
+    //       ...doc.data(),
+    //     };
+    //     console.log(stepsObject);
+    //     setSteps((prev) => [doc.data(), ...prev]);
+    //   });
+    // });
   };
 
   const handleSignOut = () => {
@@ -65,8 +78,25 @@ const HomeScreen = () => {
   const [isEnabled, setIsEnabled] = useState(false);
   const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
 
+  const onStateChange = useCallback((state) => {
+    if (state === "ended") {
+      setPlaying(false);
+      Alert.alert("video has finished playing!");
+    }
+  }, []);
+
+  const togglePlaying = useCallback(() => {
+    setPlaying((prev) => !prev);
+  }, []);
+
   const Item = ({ item, onPress }) => (
     <View>
+      <Switch
+        trackColor={{ false: "#767577", true: "#81b0ff" }}
+        thumbColor={isEnabled ? "#f5dd4b" : "#f4f3f4"}
+        onValueChange={toggleSwitch}
+        value={isEnabled}
+      />
       {isEnabled === false ? (
         <TouchableOpacity onPress={onPress} style={styles.item}>
           <Text style={styles.title}>{item.title}</Text>
@@ -74,7 +104,12 @@ const HomeScreen = () => {
       ) : (
         <View style={styles.item}>
           <Text style={styles.title}>{item.title}</Text>
-          <YoutubePlayer height={200} play={false} videoId={item.url} />
+          <YoutubePlayer
+            height={200}
+            play={playing}
+            onChangeState={onStateChange}
+            videoId={item.url}
+          />
         </View>
       )}
     </View>
@@ -112,18 +147,12 @@ const HomeScreen = () => {
           }}
           modalTitle="선택해주세요."
         />
-        <Switch
-          trackColor={{ false: "#767577", true: "#81b0ff" }}
-          thumbColor={isEnabled ? "#f5dd4b" : "#f4f3f4"}
-          ios_backgroundColor="#3e3e3e"
-          onValueChange={toggleSwitch}
-          value={isEnabled}
-        />
         {value === null ? null : (
           <FlatList
             data={steps}
             renderItem={renderItem}
             keyExtractor={(item) => item.title}
+            windowSize={2}
           />
         )}
       </View>
@@ -131,7 +160,7 @@ const HomeScreen = () => {
   );
 };
 
-export default HomeScreen;
+export default React.memo(HomeScreen);
 
 const styles = StyleSheet.create({
   header: {
