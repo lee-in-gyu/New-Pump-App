@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { auth } from "../firebase";
+import { db } from "../firebase";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -31,7 +32,11 @@ const LoginScreen = () => {
       .createUserWithEmailAndPassword(email, password)
       .then((userCredentials) => {
         const user = userCredentials.user;
-        console.log("Registered with:", user.email);
+        db.collection("user").add({
+          user_id: user.uid,
+          createdAt: Date.now(),
+        });
+        console.log("신규 메일 등록 : ", email);
       })
       .catch((error) => alert(error.message));
   };
