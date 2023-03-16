@@ -16,9 +16,12 @@ import { auth } from "../firebase";
 import { db } from "../firebase";
 import YoutubePlayer from "react-native-youtube-iframe";
 import DropDownPicker from "react-native-dropdown-picker";
+import { AntDesign } from "@expo/vector-icons";
+import { doc } from "firebase/firestore";
 
 const HomeScreen = () => {
   const navigation = useNavigation();
+  const [videoSelect, setVideoSelect] = useState();
   const [steps, setSteps] = useState([]);
   const [open, setOpen] = useState(false);
   const [playing, setPlaying] = useState(false);
@@ -36,6 +39,7 @@ const HomeScreen = () => {
 
   useEffect(() => {
     getStepDb();
+    console.log(auth.currentUser.uid);
   }, [value]);
 
   const getStepDb = async () => {
@@ -49,21 +53,8 @@ const HomeScreen = () => {
           ...doc.data(),
         }));
         setSteps(stepsObject);
-
         // console.log(stepsObject);
       });
-
-    // .get()
-    // .then((snapshot) => {
-    //   snapshot.forEach((doc) => {
-    //     const stepsObject = {
-    //       id: doc.id,
-    //       ...doc.data(),
-    //     };
-    //     console.log(stepsObject);
-    //     setSteps((prev) => [doc.data(), ...prev]);
-    //   });
-    // });
   };
 
   const handleSignOut = () => {
@@ -75,7 +66,7 @@ const HomeScreen = () => {
       .catch((error) => alert(error.message));
   };
 
-  const [isEnabled, setIsEnabled] = useState(false);
+  const [isEnabled, setIsEnabled] = useState();
   const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
 
   const onStateChange = useCallback((state) => {
@@ -91,17 +82,13 @@ const HomeScreen = () => {
 
   const Item = ({ item, onPress }) => (
     <View>
-      <Switch
-        trackColor={{ false: "#767577", true: "#81b0ff" }}
-        thumbColor={isEnabled ? "#f5dd4b" : "#f4f3f4"}
-        onValueChange={toggleSwitch}
-        value={isEnabled}
-      />
-      {isEnabled === false ? (
-        <TouchableOpacity onPress={onPress} style={styles.item}>
-          <Text style={styles.title}>{item.title}</Text>
-        </TouchableOpacity>
-      ) : (
+      <TouchableOpacity
+        onPress={() => setIsEnabled(item.title)}
+        style={styles.ytb_button}
+      >
+        <AntDesign name="youtube" size={40} color="red" />
+      </TouchableOpacity>
+      {isEnabled === item.title ? (
         <View style={styles.item}>
           <Text style={styles.title}>{item.title}</Text>
           <YoutubePlayer
@@ -110,6 +97,12 @@ const HomeScreen = () => {
             onChangeState={onStateChange}
             videoId={item.url}
           />
+        </View>
+      ) : (
+        <View style={styles.item}>
+          <Text onPress={onPress} style={styles.title}>
+            {item.title}
+          </Text>
         </View>
       )}
     </View>
@@ -167,12 +160,20 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
   },
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   button: {
     backgroundColor: "#0782F9",
     width: "60%",
     padding: 10,
     borderRadius: 10,
     marginTop: 10,
+  },
+  ytb_button: {
+    // width: "20%",
+    marginHorizontal: 16,
   },
   buttonText: {
     color: "white",
@@ -184,6 +185,7 @@ const styles = StyleSheet.create({
     padding: 20,
     marginVertical: 8,
     marginHorizontal: 16,
+    // width: "80%",
   },
   title: {
     fontSize: 20,

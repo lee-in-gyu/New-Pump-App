@@ -34,6 +34,7 @@ const LoginScreen = () => {
         const user = userCredentials.user;
         db.collection("user").add({
           user_id: user.uid,
+          user_email: email,
           createdAt: Date.now(),
         });
         console.log("신규 메일 등록 : ", email);
